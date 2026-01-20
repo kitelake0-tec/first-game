@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>숫자 맞히기 게임 (저장 기능 포함)</title>
+    <title>숫자 맞히기 게임 (1~50)</title>
     <style>
-        /* CSS 스타일 */
+        /* CSS 스타일 (기존과 유사하게, 색상 변경) */
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); /* 배경색 변경 */
+            background: linear-gradient(135deg, #84a9ff 0%, #a2b2ff 100%); /* Easy 모드에 어울리는 배경색 */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -40,7 +40,7 @@
             justify-content: space-between;
         }
 
-        .chances-left { color: #d9534f; }
+        .chances-left { color: #3c763d; } /* 초록색으로 변경 */
 
         input[type="number"] {
             width: 70%;
@@ -53,10 +53,10 @@
             outline: none;
             transition: 0.3s;
         }
-        input[type="number"]:focus { border-color: #fda085; }
+        input[type="number"]:focus { border-color: #84a9ff; }
 
         button {
-            background-color: #fda085;
+            background-color: #84a9ff; /* 버튼 색상 변경 */
             color: white;
             border: none;
             padding: 14px 28px;
@@ -67,7 +67,7 @@
             font-weight: bold;
             transition: 0.3s;
         }
-        button:hover { background-color: #f6d365; color: #444; }
+        button:hover { background-color: #6a93ff; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
 
         .message {
@@ -103,19 +103,26 @@
             color: white;
         }
         .restart-btn:hover { background-color: #222; color: white; }
+        .mode-link {
+            display: block;
+            margin-top: 1rem;
+            text-decoration: none;
+            color: #d9534f;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>숫자 맞히기 🔥</h1>
+        <h1>숫자 맞히기 (Easy)</h1>
         
         <div class="status-bar">
-            <span>범위: 1 ~ 100</span>
-            <span class="chances-left" id="chanceDisplay">남은 기회: 5</span>
+            <span>범위: 1 ~ 50</span>
+            <span class="chances-left" id="chanceDisplay">남은 기회: 7</span>
         </div>
 
-        <input type="number" id="guessField" min="1" max="100" placeholder="숫자 입력">
+        <input type="number" id="guessField" min="1" max="50" placeholder="1~50 숫자 입력">
         <button id="submitBtn" onclick="checkGuess()">확인</button>
         
         <div class="message" id="message">숫자를 입력하고 확인을 누르세요.</div>
@@ -126,10 +133,13 @@
         </div>
 
         <button class="restart-btn" id="restartBtn" onclick="resetGame()">다시 시작하기</button>
+        <a href="./index_hard.html" class="mode-link">어려운 모드 도전하기</a>
     </div>
 
     <script>
-        // 게임 상태 변수
+        const MAX_CHANCES = 7;
+        const SAVE_KEY = 'numberGameSave_50_v2'; // 기회 수 변경으로 저장 키 버전업
+
         let randomNumber;
         let chances;
         let history = [];
@@ -142,82 +152,67 @@
         const chanceDisplay = document.getElementById('chanceDisplay');
         const historyList = document.getElementById('historyList');
 
-        // 페이지 로드 시 실행 (저장된 게임이 있는지 확인)
         window.onload = function() {
             loadGame();
         };
 
-        // 엔터키 지원
         guessField.addEventListener("keypress", function(event) {
             if (event.key === "Enter") checkGuess();
         });
 
-        // 1. 게임 불러오기 (localStorage)
         function loadGame() {
-            const savedData = localStorage.getItem('numberGameSave');
+            const savedData = localStorage.getItem(SAVE_KEY);
             
             if (savedData) {
-                // 저장된 데이터가 있으면 불러옴
                 const data = JSON.parse(savedData);
                 randomNumber = data.randomNumber;
-                chances = data.chances;
+                chances = Math.min((typeof data.chances === 'number' ? data.chances : MAX_CHANCES), MAX_CHANCES);
                 history = data.history;
                 isGameOver = data.isGameOver;
 
-                // 화면 업데이트
                 updateUI();
-                
-                // 만약 불러온 게임이 이미 끝난 상태라면 종료 처리
                 if (isGameOver) endGameUI(chances > 0); 
             } else {
-                // 저장된 데이터가 없으면 새 게임 시작
                 initNewGameData();
             }
         }
 
-        // 2. 새 게임 데이터 초기화
         function initNewGameData() {
-            randomNumber = Math.floor(Math.random() * 100) + 1;
-            chances = 5;
+            randomNumber = Math.floor(Math.random() * 50) + 1;
+            chances = MAX_CHANCES;
             history = [];
             isGameOver = false;
-            saveGame(); // 초기 상태 저장
+            saveGame();
             updateUI();
             
-            // UI 초기화
             guessField.disabled = false;
             guessField.value = '';
             submitBtn.disabled = false;
             submitBtn.style.display = 'block';
             restartBtn.style.display = 'none';
-            message.textContent = '1부터 100 사이의 숫자를 맞춰보세요!';
+            message.textContent = '1부터 50 사이의 숫자를 맞춰보세요!';
             message.className = 'message';
             guessField.focus();
         }
 
-        // 3. 정답 확인 로직
         function checkGuess() {
             if (isGameOver) return;
 
             const userGuess = Number(guessField.value);
 
-            // 유효성 검사
-            if (!userGuess || userGuess < 1 || userGuess > 100) {
-                setMessage('1부터 100 사이의 숫자를 입력해주세요!', 'error');
+            if (!userGuess || userGuess < 1 || userGuess > 50) {
+                setMessage('1부터 50 사이의 숫자를 입력해주세요!', 'error');
                 return;
             }
 
-            // 이미 입력한 숫자인지 확인 (선택 사항)
             if (history.includes(userGuess)) {
-                setMessage('이미 입력했던 숫자입니다. 다른 숫자를 입력하세요.', 'error');
+                setMessage('이미 입력했던 숫자입니다.', 'error');
                 return;
             }
 
-            // 기록 추가 및 기회 차감
             history.push(userGuess);
             chances--;
 
-            // 결과 판별
             if (userGuess === randomNumber) {
                 isGameOver = true;
                 saveGame();
@@ -231,10 +226,9 @@
                 setMessage(`💀 게임 오버! 정답은 ${randomNumber}였습니다.`, 'error');
                 endGameUI(false);
             } else {
-                // 힌트 제공
                 let hint = userGuess < randomNumber ? '업 (UP) ▲' : '다운 (DOWN) ▼';
                 setMessage(hint, 'hint');
-                saveGame(); // 진행 상황 저장
+                saveGame();
                 updateUI();
             }
             
@@ -242,7 +236,6 @@
             guessField.focus();
         }
 
-        // 4. 화면 업데이트 (기회, 히스토리)
         function updateUI() {
             chanceDisplay.textContent = `남은 기회: ${chances}`;
             if (history.length > 0) {
@@ -252,26 +245,22 @@
             }
         }
 
-        // 5. 게임 종료 UI 처리
         function endGameUI(isSuccess) {
             guessField.disabled = true;
             submitBtn.style.display = 'none';
             restartBtn.style.display = 'block';
         }
 
-        // 6. 재시작 (데이터 삭제 및 초기화)
         function resetGame() {
-            localStorage.removeItem('numberGameSave'); // 저장된 데이터 삭제
+            localStorage.removeItem(SAVE_KEY);
             initNewGameData();
         }
 
-        // 7. 메시지 표시 헬퍼 함수
         function setMessage(msg, type) {
             message.textContent = msg;
             message.className = 'message ' + type;
         }
 
-        // 8. 데이터 저장 (localStorage)
         function saveGame() {
             const gameState = {
                 randomNumber: randomNumber,
@@ -279,7 +268,7 @@
                 history: history,
                 isGameOver: isGameOver
             };
-            localStorage.setItem('numberGameSave', JSON.stringify(gameState));
+            localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
         }
     </script>
 </body>
