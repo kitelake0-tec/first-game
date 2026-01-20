@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>숫자 맞히기 게임 (1~50)</title>
+    <title>숫자 맞히기 게임 (1~100)</title>
     <style>
         /* CSS 스타일 (기존과 동일) */
         body {
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); /* 분위기 전환을 위해 배경색을 살짝 시원하게 변경 */
+            background: linear-gradient(135deg, #ff8484 0%, #f48f9a 100%); /* Hard 모드에 어울리는 배경색 */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -53,10 +53,10 @@
             outline: none;
             transition: 0.3s;
         }
-        input[type="number"]:focus { border-color: #8fd3f4; }
+        input[type="number"]:focus { border-color: #f48f9a; }
 
         button {
-            background-color: #8fd3f4; /* 버튼 색상 변경 */
+            background-color: #f48f9a; /* 버튼 색상 변경 */
             color: #333;
             border: none;
             padding: 14px 28px;
@@ -67,7 +67,7 @@
             font-weight: bold;
             transition: 0.3s;
         }
-        button:hover { background-color: #84fab0; }
+        button:hover { background-color: #ff8484; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
 
         .message {
@@ -115,14 +115,14 @@
 <body>
 
     <div class="container">
-        <h1>숫자 맞히기 (Easy)</h1>
+        <h1>숫자 맞히기 (Hard)</h1>
         
         <div class="status-bar">
-            <span>범위: 1 ~ 50</span>
-            <span class="chances-left" id="chanceDisplay">남은 기회: 5</span>
+            <span>범위: 1 ~ 100</span>
+            <span class="chances-left" id="chanceDisplay">남은 기회: 7</span>
         </div>
 
-        <input type="number" id="guessField" min="1" max="50" placeholder="1~50 숫자 입력">
+        <input type="number" id="guessField" min="1" max="100" placeholder="1~100 숫자 입력">
         <button id="submitBtn" onclick="checkGuess()">확인</button>
         
         <div class="message" id="message">숫자를 입력하고 확인을 누르세요.</div>
@@ -133,7 +133,7 @@
         </div>
 
         <button class="restart-btn" id="restartBtn" onclick="resetGame()">다시 시작하기</button>
-        <a href="/index_hard.html" class="mode-link">어려운 모드 도전하기</a>
+        <a href="/index.html" class="mode-link">Easy 모드로 전환</a>
     </div>
 
     <script>
@@ -158,7 +158,7 @@
         });
 
         function loadGame() {
-            const savedData = localStorage.getItem('numberGameSave_50'); // 저장소 키 이름 변경 (충돌 방지)
+            const savedData = localStorage.getItem('numberGameSave_100'); // 저장소 키 이름 변경 (충돌 방지)
             
             if (savedData) {
                 const data = JSON.parse(savedData);
@@ -175,9 +175,8 @@
         }
 
         function initNewGameData() {
-            // [변경] 100 -> 50 으로 범위 수정
-            randomNumber = Math.floor(Math.random() * 50) + 1;
-            chances = 5;
+            randomNumber = Math.floor(Math.random() * 100) + 1;
+            chances = 7;
             history = [];
             isGameOver = false;
             saveGame();
@@ -188,7 +187,7 @@
             submitBtn.disabled = false;
             submitBtn.style.display = 'block';
             restartBtn.style.display = 'none';
-            message.textContent = '1부터 50 사이의 숫자를 맞춰보세요!';
+            message.textContent = '1부터 100 사이의 숫자를 맞춰보세요!';
             message.className = 'message';
             guessField.focus();
         }
@@ -198,9 +197,8 @@
 
             const userGuess = Number(guessField.value);
 
-            // [변경] 유효성 검사 범위 100 -> 50
-            if (!userGuess || userGuess < 1 || userGuess > 50) {
-                setMessage('1부터 50 사이의 숫자를 입력해주세요!', 'error');
+            if (!userGuess || userGuess < 1 || userGuess > 100) {
+                setMessage('1부터 100 사이의 숫자를 입력해주세요!', 'error');
                 return;
             }
 
@@ -251,7 +249,7 @@
         }
 
         function resetGame() {
-            localStorage.removeItem('numberGameSave_50'); // 키 이름 매칭
+            localStorage.removeItem('numberGameSave_100'); // 키 이름 매칭
             initNewGameData();
         }
 
@@ -267,8 +265,7 @@
                 history: history,
                 isGameOver: isGameOver
             };
-            // [변경] 저장소 키 이름을 'numberGameSave_50'으로 변경하여 기존 100버전 데이터와 꼬이지 않게 함
-            localStorage.setItem('numberGameSave_50', JSON.stringify(gameState));
+            localStorage.setItem('numberGameSave_100', JSON.stringify(gameState));
         }
     </script>
 </body>
